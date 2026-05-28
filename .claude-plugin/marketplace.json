@@ -1,0 +1,18 @@
+{
+  "name": "docs-discipline",
+  "description": "Single-plugin marketplace hosting docs-discipline.",
+  "owner": {
+    "name": "Wang Heng"
+  },
+  "plugins": [
+    {
+      "name": "docs-discipline",
+      "source": "./",
+      "description": "Session-end codify ritual + generic doc drift detection. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
+      "version": "0.2.1",
+      "homepage": "https://github.com/circlecrystal/docs-discipline",
+      "repository": "https://github.com/circlecrystal/docs-discipline",
+      "license": "MIT"
+    }
+  ]
+}

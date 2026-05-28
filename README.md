@@ -28,8 +28,19 @@ The plugin will not grow templates, examples, or opinions about *how* A/B should
 
 ## Install
 
+Claude Code installs plugins through marketplaces. This repo serves as a single-plugin marketplace for itself, so two commands set it up:
+
 ```
-/plugin install https://github.com/circlecrystal/docs-discipline.git
+/plugin marketplace add circlecrystal/docs-discipline
+/plugin install docs-discipline@docs-discipline
+```
+
+(`<plugin-name>@<marketplace-name>` — both happen to be `docs-discipline` here.)
+
+To update later:
+
+```
+/plugin marketplace update docs-discipline
 ```
 
 ## Commands
