@@ -1,0 +1,8 @@
+{
+  "name": "docs-discipline",
+  "description": "Session-end codify ritual + generic doc drift detection. Provides primitives, not opinions.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Wang Heng"
+  }
+}
