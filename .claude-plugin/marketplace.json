@@ -8,8 +8,8 @@
     {
       "name": "docs-discipline",
       "source": "./",
-      "description": "Session-end codify ritual + generic doc drift detection. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
-      "version": "0.2.1",
+      "description": "Session-end codify ritual + ad-hoc doc health review. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
+      "version": "0.3.0",
       "homepage": "https://github.com/circlecrystal/docs-discipline",
       "repository": "https://github.com/circlecrystal/docs-discipline",
       "license": "MIT"

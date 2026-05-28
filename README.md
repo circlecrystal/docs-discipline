@@ -61,24 +61,26 @@ If your A/B slots are empty, codify will gently ask once per session — never n
 
 You decide whether to apply, partially apply, skip, or mark the session as exploratory.
 
-### `/docs-discipline:drift-check`
+### `/docs-discipline:review`
 
-Periodic health check. Runs `scripts/drift-check.sh` and outputs a triage list of suspected drift:
+Ad-hoc doc health checkup. Reads `CLAUDE.md`'s A/B map, runs the drift scan, and outputs a one-screen summary. Adapts to what you actually need:
 
-- Broken relative links
-- Timestamps that lag behind `git log`
-- Orphan documents (no document references them)
-- Long strings duplicated across files with subtle inconsistencies
+- **Bare `/docs-discipline:review`** → full health (A/B state + drift + structural observations)
+- **`/docs-discipline:review for drift`** → drift scan only
+- **`/docs-discipline:review A/B`** → A/B assessment + gap-fill only
 
-It does **not** auto-fix. You decide what's drift vs. intentional.
+If A/B isn't set up yet, review will gently offer to fill it (same flow as codify). Drift findings come from `scripts/drift-check.sh` and cover broken links, stale timestamps, orphan documents, and duplicated H1s. Nothing is auto-fixed — review is a triage and gap-fill tool, not an editor.
+
+For pure CI/cron use (deterministic exit code, no Claude in the loop), invoke `scripts/drift-check.sh` directly — it stays a stable scriptable interface.
 
 ## How to use it well
 
 1. Run `/docs-discipline:init` once per project.
-2. Open `CLAUDE.md` and either confirm the A/B candidates the plugin probed for you, write your own description of where A and B live, or leave them empty (codify will gently ask later).
+2. Open `CLAUDE.md` and either confirm the A/B candidates the plugin probed for you, write your own description of where A and B live, or leave them empty (codify or review will gently ask later).
 3. Add anything else under `## Project governance` as you see fit — the plugin won't touch it.
 4. At the end of each Claude Code session, run `/docs-discipline:codify`.
-5. Periodically (weekly works well), run `/docs-discipline:drift-check`.
+5. Anytime you want a doc status read (with or without session changes), run `/docs-discipline:review`.
+6. For automation (CI / cron / weekly), wire `scripts/drift-check.sh` directly.
 
 ## License
 

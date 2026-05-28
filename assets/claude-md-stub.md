@@ -3,7 +3,7 @@
 This project uses [docs-discipline](https://github.com/circlecrystal/docs-discipline).
 
 - At the end of each session, run `/docs-discipline:codify`.
-- Periodically run `/docs-discipline:drift-check` to surface doc drift.
+- For an ad-hoc doc health check, run `/docs-discipline:review`.
 
 ## Doc layers (A/B)
 
