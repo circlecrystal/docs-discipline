@@ -1,51 +1,90 @@
 ---
-description: Session-end codify ritual. Observes the project's actual docs structure and proposes where this session's findings should land — without imposing any template.
+description: Session-end codify ritual. A/B-aware — reads CLAUDE.md's A/B map (or gently helps fill it), then classifies session findings into A-layer artifacts and B-layer SSOT edits.
 ---
 
-You are running the docs-discipline codify ritual at the end of a Claude Code session. Your goal is to help the user turn this session's ephemeral findings into durable structure that fits *their* project — not a structure this plugin imposes.
+You are running the docs-discipline codify ritual at the end of a Claude Code session. Your goal is to help the user turn this session's ephemeral findings into durable structure that fits *their* project's A/B layer convention.
 
 ## What you must do
 
-1. **Inspect what changed in this session.**
-   - Run `git status` and `git diff` to see uncommitted changes.
-   - Review the conversation for key findings, decisions, conclusions, or knowledge that are NOT yet captured in the diff (e.g., a spike conclusion that was reached verbally but not written down; a design tradeoff the user accepted).
-   - Make a private list of "significant findings worth codifying."
+### 1. Inspect what changed in this session
 
-2. **Read the project's `CLAUDE.md`** if present. Whatever governance rules the project itself declares — read them and respect them. The plugin imposes no rules; the project may.
+- Run `git status` and `git diff` to see uncommitted changes.
+- Review the conversation context for key findings, decisions, conclusions, or knowledge that are NOT yet captured in the diff.
+- Make a private list of "significant findings worth codifying."
 
-3. **Observe the project's actual docs structure — adaptively, without assumptions.**
-   - Is there a `docs/` directory? What is its layout? Are there subdirectories with their own conventions?
-   - Are there ADRs, decision logs, design docs, changelogs anywhere?
-   - Is documentation in README files, in a wiki linked from README, or scattered as code comments?
-   - Are there per-feature or per-module doc files near the code?
-   - **If you cannot find a clear docs structure, say so honestly — do not invent one.**
+### 2. Read CLAUDE.md and assess A/B state
 
-4. **Synthesize a codify checklist.** For each significant finding from step 1, propose:
-   - **Where it should land**: a specific file path in the project's actual docs. If multiple plausible locations exist, list them and let the user pick.
-   - **What the change looks like**: a concrete diff sketch (additions, edits) — not vague advice like "update the docs."
-   - **Whether it conflicts with existing content**: use `grep` to check whether the project already says something contradictory at the proposed location or elsewhere. Flag conflicts explicitly.
+Read the project's `CLAUDE.md` (must exist — if not, ask user to run `/docs-discipline:init` first).
 
-5. **Present the checklist to the user.** Offer them four choices:
-   - **Apply all** — you write the diffs.
-   - **Apply selectively** — user picks which items.
-   - **Skip all** — nothing is written; findings remain only in git history and the conversation.
-   - **Mark exploratory** — user declares this session was exploratory and intentionally not for codifying.
+For each of the two A/B slots (`### Where this project's A layer lives` / `### Where this project's B layer lives`), determine its state:
 
-6. **Apply only what the user approved.** Be conservative — if uncertain about wording or placement, surface the ambiguity rather than guessing.
+- **Filled** — the slot contains **non-comment text** the user has written (i.e., real prose outside `<!-- -->` blocks). Treat as authoritative.
+- **Suggested** — the slot contains an init-generated comment like `<!-- Detected candidates (keep, edit, or clear): ... -->` but no real prose. Treat as a hypothesis to confirm with the user.
+- **Empty** — the slot only contains the default placeholder comment (`<!-- Free-form. If empty, ... -->`) or is blank. The user has not engaged with this layer yet.
+
+### 3. Gentle gap-fill (only when needed)
+
+If either slot is **Suggested** or **Empty**, enter the gap-fill flow:
+
+a. Scan project structure using the same heuristic logic as `/docs-discipline:init` (date-prefixed files, identifier-prefixed files, `history/` / `logs/` / `sessions/` / `spikes/` / `decisions/` / `adr/` for A; `README.md`, `STATUS.md`, `ROADMAP.md`, docs with "current/status/roadmap" content for B).
+
+b. Present to the user, clearly and once:
+
+> "Your project's A layer / B layer / both layers haven't been explicitly mapped yet. Here's what I see as candidates: [list]. Would you like to:
+> - **(1) Fill in CLAUDE.md** with these (you can edit before saving) — preferred
+> - **(2) Use these for this codify only** without writing to CLAUDE.md
+> - **(3) Skip — proceed with generic heuristics, no A/B classification this run**"
+
+c. Honor the choice:
+- (1) → write the chosen description to CLAUDE.md's A/B slot, replacing the comment. Then continue codifying with A/B awareness.
+- (2) → continue codifying with A/B awareness in this run, but **do not modify CLAUDE.md**.
+- (3) → continue codifying without A/B classification; just propose where findings go based on what you see.
+
+d. **Do not nag**. If the user picks (2) or (3), do not re-ask in this session. (If a future session also has empty slots, that session's codify run will ask once again — that's fine and expected; just don't loop.)
+
+### 4. Observe the project's docs structure
+
+Whether or not you have an A/B map, scan the project's actual docs adaptively:
+- Is there a `docs/` directory? What's inside?
+- Are there ADRs, design docs, changelogs, wiki references?
+- Where do per-feature docs live?
+
+This grounds the codify proposals in what the project actually has.
+
+### 5. Synthesize the codify checklist
+
+For each significant finding from step 1, propose:
+
+- **Layer**: A (immutable artifact) or B (SSOT update). Use the A/B map if available; otherwise use judgment based on the finding's nature (one-shot dated capture → A; current-state assertion → B).
+- **Where it should land**: a specific file path. For A-layer additions, this is usually a new file (suggest a dated/numbered name fitting the project's convention). For B-layer updates, this is an edit to an existing file.
+- **What the change looks like**: a concrete diff sketch (additions, edits) — not vague advice.
+- **Whether it conflicts with existing B-layer content**: use `grep` to check whether the project already says something contradictory. Flag conflicts explicitly.
+
+### 6. Present and apply
+
+Offer the user these choices:
+- **Apply all** — you write the diffs.
+- **Apply selectively** — user picks which items.
+- **Skip all** — nothing is written.
+- **Mark exploratory** — declare this session was exploratory, no codify needed.
+
+Apply only what the user approves. Be conservative — if uncertain about wording or placement, surface the ambiguity rather than guessing.
 
 ## What you must NOT do
 
-- Do not assume the project has `docs/`, `spikes/`, ADRs, an SSOT map, status symbol systems, or any particular layer model. If those exist, observe and use them. If they don't, do not create them or suggest them.
-- Do not write findings to "default" paths invented by the plugin. The plugin has no defaults.
-- Do not auto-apply changes. Always present the checklist first.
-- Do not silently overwrite existing content. Always flag conflicts.
-- Do not "teach" the user how their docs should be structured. Their structure is their choice.
+- ❌ Do not assume A or B has a particular structure. Use what the user has declared in CLAUDE.md, or use observation when they haven't.
+- ❌ Do not force users to fill in A/B before codifying. Option (3) "skip" is always available.
+- ❌ Do not silently edit CLAUDE.md's A/B slots — only after the user picks option (1).
+- ❌ Do not nag. One ask per session run, not per codify invocation.
+- ❌ Do not auto-apply findings. Always present the checklist first.
+- ❌ Do not silently overwrite or contradict existing B-layer content. Flag conflicts.
+- ❌ Do not "teach" the user how their docs should be structured beyond the A/B concept itself.
 
 ## If the project's docs are chaotic or absent
 
-This happens. It is acceptable and honest to say:
+It is acceptable to say:
 
-> "I could not find a clear place for finding X. The project has no `docs/` directory and the README does not reference any documentation. Please tell me where to put it, or skip it for now."
+> "I could not find a clear A-layer or B-layer location for finding X. The project has no obvious immutable-artifact directory. Please tell me where to put it, or skip it for now."
 
 Do not paper over with assumptions.
 
