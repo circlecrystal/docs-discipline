@@ -63,15 +63,16 @@ You decide whether to apply, partially apply, skip, or mark the session as explo
 
 ### `/docs-discipline:review`
 
-Ad-hoc doc health checkup. Reads `CLAUDE.md`'s A/B map, runs the drift scan, and outputs a one-screen summary. Adapts to what you actually need:
+Ad-hoc doc health checkup. Reads `CLAUDE.md`'s A/B map, runs the drift scan, performs an SSOT consistency check, and outputs a one-screen summary. Adapts to what you actually need:
 
-- **Bare `/docs-discipline:review`** → full health (A/B state + drift + structural observations)
+- **Bare `/docs-discipline:review`** → full health (A/B state + drift + SSOT + structural observations)
 - **`/docs-discipline:review for drift`** → drift scan only
 - **`/docs-discipline:review A/B`** → A/B assessment + gap-fill only
+- **`/docs-discipline:review SSOT`** → SSOT consistency scan only
 
-If A/B isn't set up yet, review will gently offer to fill it (same flow as codify). Drift findings come from `scripts/drift-check.sh` and cover broken links, stale timestamps, orphan documents, and duplicated H1s. Nothing is auto-fixed — review is a triage and gap-fill tool, not an editor.
+The **SSOT scan** identifies atomic facts (statuses, version values, decisions, progress numbers) that appear in multiple B-layer files. Same fact in many places means edits will eventually miss one — that's the root pattern behind most doc drift. The scan reads the B-layer files you declared in CLAUDE.md (or falls back to heuristic discovery if you skipped A/B), cross-references facts, and surfaces candidates. Nothing is auto-fixed; the user decides what's intentional restatement vs. real drift, and which file is canonical.
 
-For pure CI/cron use (deterministic exit code, no Claude in the loop), invoke `scripts/drift-check.sh` directly — it stays a stable scriptable interface.
+Drift findings come from `scripts/drift-check.sh` (broken links, stale timestamps, orphan documents, duplicated H1s). For pure CI/cron use, invoke that script directly — it stays a deterministic, scriptable interface.
 
 ## How to use it well
 

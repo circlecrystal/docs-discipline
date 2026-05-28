@@ -1,7 +1,7 @@
 {
   "name": "docs-discipline",
-  "description": "Session-end codify ritual + ad-hoc doc health review. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
-  "version": "0.3.0",
+  "description": "Session-end codify ritual + ad-hoc doc health review with SSOT consistency check. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
+  "version": "0.4.0",
   "author": {
     "name": "Wang Heng"
   }
