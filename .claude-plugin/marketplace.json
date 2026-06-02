@@ -8,8 +8,8 @@
     {
       "name": "docs-discipline",
       "source": "./",
-      "description": "Session-end codify ritual + ad-hoc doc health review with SSOT consistency check. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
-      "version": "0.6.0",
+      "description": "Single self-bootstrapping codify command + ad-hoc doc health review with SSOT consistency check. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
+      "version": "0.7.0",
       "homepage": "https://github.com/circlecrystal/docs-discipline",
       "repository": "https://github.com/circlecrystal/docs-discipline",
       "license": "MIT"

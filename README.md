@@ -45,17 +45,13 @@ To update later:
 
 ## Commands
 
-### `/docs-discipline:init`
-
-One-time per project. If `CLAUDE.md` doesn't exist, the plugin creates a minimal one with an A/B section containing two empty slots — and probes your existing files to suggest A-layer and B-layer candidates as comments inside those slots. You can keep, edit, or clear the suggestions.
-
-If `CLAUDE.md` already exists, the plugin only appends a short docs-discipline declaration block — it does **not** force A/B onto your existing governance content. The A/B conversation happens later, gently, via codify.
-
-Also copies `drift-check.sh` into the project's `scripts/`.
+Two commands. **`codify`** is the single entry point you run every session — it self-bootstraps setup, codifies, reviews, and offers a handoff. **`review`** is a standalone ad-hoc checkup (also auto-run inside codify's Phase 2). There is no separate `/init` — codify absorbs setup as its Phase 0.
 
 ### `/docs-discipline:codify`
 
-Run at the end of every session. This one command runs three phases in order:
+Run at the end of every session. This one command is **self-bootstrapping** and runs four phases in order:
+
+**Phase 0 — setup (automatic, idempotent).** On its first run codify sets the project up — no separate `/init` needed. If `CLAUDE.md` doesn't exist, it creates a minimal one (a docs-discipline declaration plus an A/B section with two empty slots). If `CLAUDE.md` already exists without the docs-discipline marker, it appends only the short declaration block — it does **not** force A/B onto your existing governance content (codify surfaces A/B gently later, in Phase 1). It also copies `drift-check.sh` into `scripts/`. On an already-set-up project, Phase 0 just reports "already set up" in one line and moves on. Phase 0 always reports what it created, appended, copied, or skipped — it never writes silently.
 
 **Phase 1 — codify.** Reads `CLAUDE.md`'s A/B map (if filled), observes your project's docs structure, and produces a checklist of where this session's findings should land — classified by A layer (new immutable artifacts) and B layer (SSOT updates). If your A/B slots are empty, codify will gently ask once per session — never nag. You can fill them in (preferred), use the suggestions for this run only, or skip A/B classification entirely. You decide whether to apply, partially apply, skip, or mark the session as exploratory.
 
@@ -78,8 +74,8 @@ Drift findings come from `scripts/drift-check.sh` (broken links, stale timestamp
 
 ## How to use it well
 
-1. Run `/docs-discipline:init` once per project.
-2. Open `CLAUDE.md` and either confirm the A/B candidates the plugin probed for you, write your own description of where A and B live, or leave them empty (codify or review will gently ask later).
+1. Just run `/docs-discipline:codify` — on its first run, Phase 0 self-initializes the project (creates `CLAUDE.md` if missing, copies the drift script). No separate setup command.
+2. Open `CLAUDE.md` and either write your own description of where A and B live, confirm the A/B candidates codify surfaces on its first run, or leave the slots empty (codify or review will gently ask later).
 3. Add anything else under `## Project governance` as you see fit — the plugin won't touch it.
 4. At the end of each Claude Code session, run `/docs-discipline:codify`. One command does it all: it codifies findings, then auto-runs the doc-health review, then optionally writes a session-handoff plan.
 5. Anytime you want a doc status read (with or without session changes), run `/docs-discipline:review`.

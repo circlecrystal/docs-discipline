@@ -1,8 +1,37 @@
 ---
-description: Session-end ritual. Codifies this session's findings into the project's A/B doc layers, then automatically runs a doc-health review (drift + SSOT), and optionally writes a session-handoff plan — all in one command. A/B-aware; interactive at every decision point.
+description: Session-end ritual and single entry point. Self-bootstraps docs-discipline setup if missing, codifies this session's findings into the project's A/B doc layers, automatically runs a doc-health review (drift + SSOT), and optionally writes a session-handoff plan — all in one command. A/B-aware; interactive at every decision point.
 ---
 
-You are running the docs-discipline codify ritual at the end of a Claude Code session. It has three phases, run in order within this one command: **Phase 1** sediments this session's findings into the project's A/B layer convention; **Phase 2** automatically continues into a doc-health review; **Phase 3** optionally writes a session-handoff plan. Stay interactive — surface decisions to the user at each point; never silently write.
+You are running the docs-discipline codify ritual at the end of a Claude Code session — the **single entry point** for docs-discipline. It runs phases in order within this one command: **Phase 0** ensures docs-discipline is set up in this project (self-bootstrap, idempotent — absorbs what used to be a separate `/init`); **Phase 1** sediments this session's findings into the project's A/B layer convention; **Phase 2** automatically continues into a doc-health review; **Phase 3** optionally writes a session-handoff plan. Stay interactive — surface decisions to the user at each point; never silently write.
+
+## Phase 0 — Ensure setup (self-bootstrap, idempotent)
+
+Before codifying, make sure docs-discipline is actually set up in this project. This absorbs what used to be a separate `/init` step — codify is now self-bootstrapping. Run this first, every time; it is idempotent and only touches what is missing. Never write silently — leave a receipt (step 0c).
+
+### 0a. Check setup state
+
+The project is set up when **all three** hold:
+- `CLAUDE.md` exists at the project root, AND
+- it contains the marker line `This project uses [docs-discipline]`, AND
+- `scripts/drift-check.sh` exists.
+
+If all three are true → say so in **one line** (e.g. "docs-discipline already set up — CLAUDE.md + drift-check.sh present, skipping bootstrap") and proceed to Phase 1. Do not stay completely silent; leave a one-line receipt.
+
+If any is missing → enter bootstrap (0b). Only create / append / copy what is actually missing.
+
+### 0b. Bootstrap (only fills gaps)
+
+1. **Locate the plugin assets.** Find `${CLAUDE_PLUGIN_ROOT}/assets/` via Bash (it holds `claude-md-stub.md` and `drift-check.sh`). If `${CLAUDE_PLUGIN_ROOT}` is empty, locate the installed copy under `~/.claude/plugins/`. If you cannot locate the assets at all → report the error and **stop**; do not invent content.
+
+2. **CLAUDE.md — Case A (does NOT exist):** write `CLAUDE.md` from `assets/claude-md-stub.md` verbatim. The stub already carries empty A/B placeholder slots; do **not** probe or fill candidates here — Phase 1 step 3 owns A/B discovery, so the probing heuristic is described in exactly one place (step 3), not duplicated in Phase 0. (Phase 1 step 2 will read these slots as **Empty** and step 3 will offer to fill them.)
+
+3. **CLAUDE.md — Case B (exists but no marker):** append ONLY the top declaration block of the stub (everything up to but NOT including `## Doc layers (A/B)`), separated by a single blank line. Do **not** force the A/B section onto an existing CLAUDE.md — the user may already have governance content there that would conflict. Phase 1 surfaces A/B gently later instead.
+
+4. **scripts/drift-check.sh:** ensure `scripts/` exists (create if missing). If `scripts/drift-check.sh` is missing → copy the asset there and `chmod +x`. If it exists with identical content → skip. If it exists with **different** content → do NOT overwrite; report the conflict, show a diff, and ask the user how to proceed.
+
+### 0c. Report (do not write silently)
+
+List exactly what was created / appended / copied / skipped, with concrete file paths. This receipt is what keeps Phase 0 from silently writing to disk: on a greenfield project (Case A), the very first codify creates `CLAUDE.md` + copies the drift script, and the user must see that happen. Then continue into Phase 1.
 
 ## Phase 1 — Codify this session's findings
 
@@ -14,19 +43,19 @@ You are running the docs-discipline codify ritual at the end of a Claude Code se
 
 ### 2. Read CLAUDE.md and assess A/B state
 
-Read the project's `CLAUDE.md` (must exist — if not, ask user to run `/docs-discipline:init` first).
+Read the project's `CLAUDE.md` (Phase 0 has already ensured it exists).
 
 For each of the two A/B slots (`### Where this project's A layer lives` / `### Where this project's B layer lives`), determine its state:
 
 - **Filled** — the slot contains **non-comment text** the user has written (i.e., real prose outside `<!-- -->` blocks). Treat as authoritative.
-- **Suggested** — the slot contains an init-generated comment like `<!-- Detected candidates (keep, edit, or clear): ... -->` but no real prose. Treat as a hypothesis to confirm with the user.
+- **Suggested** — the slot contains a setup-generated comment (written by Phase 0) like `<!-- Detected candidates (keep, edit, or clear): ... -->` but no real prose. Treat as a hypothesis to confirm with the user.
 - **Empty** — the slot only contains the default placeholder comment (`<!-- Free-form. If empty, ... -->`) or is blank. The user has not engaged with this layer yet.
 
 ### 3. Gentle gap-fill (only when needed)
 
 If either slot is **Suggested** or **Empty**, enter the gap-fill flow:
 
-a. Scan project structure using the same heuristic logic as `/docs-discipline:init` (date-prefixed files, identifier-prefixed files, `history/` / `logs/` / `sessions/` / `spikes/` / `decisions/` / `adr/` for A; `README.md`, `STATUS.md`, `ROADMAP.md`, docs with "current/status/roadmap" content for B).
+a. Scan project structure using the same A/B probing heuristic (date-prefixed files, identifier-prefixed files, `history/` / `logs/` / `sessions/` / `spikes/` / `decisions/` / `adr/` for A; `README.md`, `STATUS.md`, `ROADMAP.md`, docs with "current/status/roadmap" content for B). This is the single description of the heuristic; Phase 0 deliberately defers all A/B discovery here.
 
 b. Present to the user, clearly and once:
 
@@ -74,14 +103,14 @@ Apply only what the user approves. Be conservative — if uncertain about wordin
 
 After Phase 1, **automatically continue** into a doc-health review. Do not ask "want a review?", and do not require the user to invoke `/docs-discipline:review` separately — the review is now a fixed part of this one ritual.
 
-**Run the review from its single source — do not paste, paraphrase, or reconstruct its steps here.** The review procedure lives in the sibling command file `commands/review.md`; follow it live so the two never drift:
+**Run the review from its single source — do not paste, paraphrase, or reconstruct its steps here.** The review procedure lives in the shared asset `assets/review-procedure.md` (the same file the `/docs-discipline:review` shim reads); follow it live so the two never drift:
 
 1. **Load it via Bash, not by trusting variable expansion in the Read tool.** `${CLAUDE_PLUGIN_ROOT}` is a shell variable; print and read the file through a shell so it expands reliably:
    ```bash
-   ls "${CLAUDE_PLUGIN_ROOT}/commands/review.md" && cat "${CLAUDE_PLUGIN_ROOT}/commands/review.md"
+   ls "${CLAUDE_PLUGIN_ROOT}/assets/review-procedure.md" && cat "${CLAUDE_PLUGIN_ROOT}/assets/review-procedure.md"
    ```
-   If `${CLAUDE_PLUGIN_ROOT}` is empty in your shell, locate the installed copy instead (e.g. search the docs-discipline plugin dir under `~/.claude/plugins/` for `commands/review.md`, or use the `--plugin-dir` path). Do not proceed from memory — read the actual file.
-2. Perform that file's procedure, but **skip the steps Phase 1 already did**: its `Read CLAUDE.md / assess A/B`, `Route by intent`, and `Observe project docs structure`. **Resume at `Run drift scan`, then `SSOT consistency scan`, then `Output doc health summary`.** Treat intent as **full health** (run both drift and SSOT).
+   If `${CLAUDE_PLUGIN_ROOT}` is empty in your shell, locate the installed copy instead (e.g. search the docs-discipline plugin dir under `~/.claude/plugins/` for `assets/review-procedure.md`). Do not proceed from memory — read the actual file.
+2. Perform that file's procedure, but **skip the steps Phase 1 already did**: its `Read CLAUDE.md and assess A/B state`, `Route by intent`, and `Observe project docs structure`. **Resume at `Run drift scan`, then `SSOT consistency scan`, then `Output doc health summary`.** Treat intent as **full health** (run both drift and SSOT).
 3. **Always run this phase**, even if Phase 1 wrote nothing (Skip all / Mark exploratory / a selective apply that wrote nothing). The drift and SSOT scans inspect the project's existing doc corpus — their value does not depend on whether this session produced new findings.
 4. The review is **triage only**: surface drift/SSOT candidates and let the user decide. Do not auto-fix. Do not re-ask the A/B gap-fill here — Phase 1 owns it.
 
@@ -132,7 +161,7 @@ Some sessions end with "I'll continue this in a fresh session." Offer — once, 
 - ❌ Do not silently overwrite or contradict existing B-layer content. Flag conflicts.
 - ❌ Do not "teach" the user how their docs should be structured beyond the A/B concept itself.
 - ❌ Do not skip Phase 2 or turn it back into an opt-in "want a review?" prompt — the review runs automatically as part of codify.
-- ❌ Do not paste or reconstruct review.md's drift/SSOT procedure into this file — read it from its single source so the two never drift.
+- ❌ Do not paste or reconstruct `assets/review-procedure.md`'s drift/SSOT procedure into this file — read it from its single source so the two never drift.
 - ❌ Do not auto-fix drift/SSOT in Phase 2 — it stays triage.
 - ❌ Do not force the Phase 3 handoff — it is opt-in; write nothing if the user declines.
 
@@ -146,4 +175,4 @@ Do not paper over with assumptions.
 
 ## If the user marks the session exploratory
 
-"Exploratory" applies to **Phase 1 only**: acknowledge, write no codify findings, and note that any committed code remains in `git log` regardless — `codify` only governs documentation. Then **still continue into Phase 2 (the doc-health review always runs) and Phase 3 (still offer the handoff)** — neither depends on this session having produced findings.
+"Exploratory" applies to **Phase 1 only**. **Phase 0 (setup self-bootstrap) always runs first** — the project still needs to be set up whether or not the session was exploratory. For Phase 1: acknowledge, write no codify findings, and note that any committed code remains in `git log` regardless — `codify` only governs documentation. Then **still continue into Phase 2 (the doc-health review always runs) and Phase 3 (still offer the handoff)** — neither depends on this session having produced findings.
