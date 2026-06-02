@@ -55,11 +55,13 @@ Also copies `drift-check.sh` into the project's `scripts/`.
 
 ### `/docs-discipline:codify`
 
-Run at the end of every session. Reads `CLAUDE.md`'s A/B map (if filled), observes your project's docs structure, and produces a checklist of where this session's findings should land — classified by A layer (new immutable artifacts) and B layer (SSOT updates).
+Run at the end of every session. This one command runs three phases in order:
 
-If your A/B slots are empty, codify will gently ask once per session — never nag. You can fill them in (preferred), use the suggestions for this run only, or skip A/B classification entirely.
+**Phase 1 — codify.** Reads `CLAUDE.md`'s A/B map (if filled), observes your project's docs structure, and produces a checklist of where this session's findings should land — classified by A layer (new immutable artifacts) and B layer (SSOT updates). If your A/B slots are empty, codify will gently ask once per session — never nag. You can fill them in (preferred), use the suggestions for this run only, or skip A/B classification entirely. You decide whether to apply, partially apply, skip, or mark the session as exploratory.
 
-You decide whether to apply, partially apply, skip, or mark the session as exploratory.
+**Phase 2 — review (automatic).** Right after codifying, it continues into the `/docs-discipline:review` drift + SSOT + health summary — no separate invocation needed. This phase always runs (a health check doesn't depend on new findings) and stays triage-only; nothing is auto-fixed.
+
+**Phase 3 — session-handoff plan (optional).** Finally, it offers to write a self-contained handoff document (goal, decisions, current state, next steps, pointers) so you can resume in a fresh session. It asks where to put it and imposes no location. Decline anytime.
 
 ### `/docs-discipline:review`
 
@@ -79,7 +81,7 @@ Drift findings come from `scripts/drift-check.sh` (broken links, stale timestamp
 1. Run `/docs-discipline:init` once per project.
 2. Open `CLAUDE.md` and either confirm the A/B candidates the plugin probed for you, write your own description of where A and B live, or leave them empty (codify or review will gently ask later).
 3. Add anything else under `## Project governance` as you see fit — the plugin won't touch it.
-4. At the end of each Claude Code session, run `/docs-discipline:codify`. When it lands findings, it offers a quick `/docs-discipline:review` (the natural codify → review sequence) — optional, decline anytime.
+4. At the end of each Claude Code session, run `/docs-discipline:codify`. One command does it all: it codifies findings, then auto-runs the doc-health review, then optionally writes a session-handoff plan.
 5. Anytime you want a doc status read (with or without session changes), run `/docs-discipline:review`.
 6. For automation (CI / cron / weekly), wire `scripts/drift-check.sh` directly.
 

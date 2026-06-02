@@ -113,7 +113,5 @@ Mark sections `(skipped)` if intent excluded them. If SSOT fell back to heuristi
 ## Relationship to other commands
 
 - **`/docs-discipline:init`** runs once per project to bootstrap CLAUDE.md and copy the drift script.
-- **`/docs-discipline:codify`** is the session-end ritual — for sedimenting *new* findings into A and B. Run it when you have session output to land.
-- **`/docs-discipline:review`** (this command) is the ad-hoc health checkup — for inspecting docs *without* new findings, ensuring A/B is set up, surfacing drift, and identifying SSOT violations. Run it whenever you want a status read.
-
-If a session has produced findings AND you also want a review, run codify first, then review.
+- **`/docs-discipline:codify`** is the session-end ritual — it sediments *new* findings into A and B, then **automatically runs this review's drift + SSOT + summary** as its Phase 2 (and optionally writes a session-handoff plan). Run it when you have session output to land; you do not need to invoke review separately afterward.
+- **`/docs-discipline:review`** (this command) remains the **standalone, ad-hoc health checkup** — for inspecting docs *without* codifying, ensuring A/B is set up, surfacing drift, and identifying SSOT violations. Run it whenever you want a status read on its own.
