@@ -79,7 +79,7 @@ Drift findings come from `scripts/drift-check.sh` (broken links, stale timestamp
 1. Run `/docs-discipline:init` once per project.
 2. Open `CLAUDE.md` and either confirm the A/B candidates the plugin probed for you, write your own description of where A and B live, or leave them empty (codify or review will gently ask later).
 3. Add anything else under `## Project governance` as you see fit — the plugin won't touch it.
-4. At the end of each Claude Code session, run `/docs-discipline:codify`.
+4. At the end of each Claude Code session, run `/docs-discipline:codify`. When it lands findings, it offers a quick `/docs-discipline:review` (the natural codify → review sequence) — optional, decline anytime.
 5. Anytime you want a doc status read (with or without session changes), run `/docs-discipline:review`.
 6. For automation (CI / cron / weekly), wire `scripts/drift-check.sh` directly.
 

@@ -70,6 +70,16 @@ Offer the user these choices:
 
 Apply only what the user approves. Be conservative — if uncertain about wording or placement, surface the ambiguity rather than guessing.
 
+### 7. Offer a doc-health review (soft, optional)
+
+After findings have been applied, offer once — never force:
+
+> "Findings landed. Want a quick **doc-health review** now? `/docs-discipline:review` scans your B layer for drift and SSOT violations (facts repeated across files). This is the natural codify → review sequence — but it's optional, say no and we're done."
+
+- Offer **only when at least one finding was actually written this run**. Do not offer if the user chose *Skip all* or *Mark exploratory*, **nor if *Apply selectively* ended up writing nothing** — an empty session has nothing new to drift-check, and nagging it is noise.
+- This is a **distinct, second offer** (about `review`), separate from the step-3 A/B gap-fill ask. The step-78 "one ask per session run" rule governs the A/B ask; this review offer is its own one-shot. In a fresh project's first codify both may fire — that is acceptable, but keep each strictly **once** and never re-ask either this session.
+- Accept any answer. Do **not** run `review` yourself or auto-chain into it — the user must invoke it. Your job is to surface the sequence at the right moment, not to enforce it.
+
 ## What you must NOT do
 
 - ❌ Do not assume A or B has a particular structure. Use what the user has declared in CLAUDE.md, or use observation when they haven't.
@@ -79,6 +89,7 @@ Apply only what the user approves. Be conservative — if uncertain about wordin
 - ❌ Do not auto-apply findings. Always present the checklist first.
 - ❌ Do not silently overwrite or contradict existing B-layer content. Flag conflicts.
 - ❌ Do not "teach" the user how their docs should be structured beyond the A/B concept itself.
+- ❌ Do not auto-run or force `/docs-discipline:review`. Offer it once at the end (step 7), only when **≥1 finding was actually written** this run, and respect a "no".
 
 ## If the project's docs are chaotic or absent
 
