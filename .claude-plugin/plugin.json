@@ -1,7 +1,7 @@
 {
   "name": "docs-discipline",
   "description": "Single self-bootstrapping codify command + ad-hoc doc health review with SSOT consistency check. Asserts A/B layer separation as a universal pattern; imposes no specific structure.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": {
     "name": "Wang Heng"
   }

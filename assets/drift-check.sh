@@ -26,7 +26,7 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   # Git-aware: respect the project's .gitignore. Includes tracked + untracked-but-not-ignored.
   while IFS= read -r line; do
     MD+=("./$line")
-  done < <(git ls-files '*.md' --cached --others --exclude-standard 2>/dev/null | sort)
+  done < <(git ls-files '*.md' --cached --others --exclude-standard 2>/dev/null | LC_ALL=C sort)
 else
   # Not a git repo — fall back to find with a minimal set of common excludes.
   while IFS= read -r line; do
@@ -37,7 +37,7 @@ else
     -not -path '*/build/*' \
     -not -path '*/dist/*' \
     -not -path '*/.venv/*' \
-    -not -path '*/__pycache__/*' 2>/dev/null | sort)
+    -not -path '*/__pycache__/*' 2>/dev/null | LC_ALL=C sort)
 fi
 
 if [ "${#MD[@]}" -eq 0 ]; then
@@ -142,7 +142,7 @@ for f in "${MD[@]}"; do
   [ -z "$H1" ] && continue
   printf '%s\t%s\n' "$H1" "$f" >> "$H1_TMP"
 done
-DUP_H1=$(awk -F '\t' '{print $1}' "$H1_TMP" | sort | uniq -d)
+DUP_H1=$(awk -F '\t' '{print $1}' "$H1_TMP" | LC_ALL=C sort | LC_ALL=C uniq -d)
 DUP_COUNT=0
 if [ -n "$DUP_H1" ]; then
   while IFS= read -r title; do
