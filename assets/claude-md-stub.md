@@ -11,6 +11,7 @@ Durable docs follow a two-layer pattern. This is universal — every project ben
 
 - **A layer (artifacts)**: immutable, dated. Written once, never edited after creation. Each captures a point-in-time finding, decision, or session output.
 - **B layer (SSOT)**: living, curated. Few files. Each B-layer assertion should be backed by an A-layer artifact.
+- **Keep B thin.** A B-layer current-state claim is an *aggregate + a pointer* to the A-layer artifact that backs it — not a restatement of that artifact's narrative. Per-session detail belongs in A (which may grow without bound); B stays small by pointing, not copying. A-layer size is expected; only B-layer growth is bloat.
 
 Drift typically happens when old A-layer "as-of-then" content is treated as B-layer "as-of-now" truth.
 

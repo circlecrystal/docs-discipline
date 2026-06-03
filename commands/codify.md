@@ -88,6 +88,7 @@ For each significant finding from step 1, propose:
 - **Where it should land**: a specific file path. For A-layer additions, this is usually a new file (suggest a dated/numbered name fitting the project's convention). For B-layer updates, this is an edit to an existing file.
 - **What the change looks like**: a concrete diff sketch (additions, edits) — not vague advice.
 - **Whether it conflicts with existing B-layer content**: use `grep` to check whether the project already says something contradictory. Flag conflicts explicitly.
+- **Keep B thin (current-state findings)**: when the finding is a current-state update destined for B, keep the B edit to an *aggregate + pointer* — route the narrative into an A-layer artifact (a new dated file, or the Phase 3 handoff) and have the B line point to it. Do **not** append a per-session narrative block to a B-layer file; B is curated, not a journal. (See the "Keep B thin" layer principle.)
 
 ### 6. Present and apply
 
@@ -125,6 +126,7 @@ Some sessions end with "I'll continue this in a fresh session." Offer — once, 
 - **If the user accepts:**
   1. **Ask where to write it.** Propose an adaptive default and let the user confirm or override — docs-discipline imposes no location. Suggested default: if the project has a `docs/` directory, `docs/handoff/handoff-<date>-<slug>.md`; otherwise `<repo-root>/.handoff/handoff-<date>-<slug>.md`. If the project's A layer is mapped and the user prefers, the A-layer artifact location is also fine. Get `<date>` from `date +%F`.
   2. **Write the handoff** using the template below. Keep it self-contained — the resuming session may start with zero prior context. Reference what Phase 1 codified (link the A/B artifacts) and any open drift/SSOT items Phase 2 surfaced.
+  3. **Keep B pointing, not restating.** If Phase 1 also updated a B-layer current-state doc this session, make that B edit *point to this handoff* rather than restate its narrative. The handoff (A) is the narrative's home; B carries the pointer — this is what stops the same session story from being written twice (once in B, once in A).
 - **If the user declines:** write nothing and finish.
 
 **Handoff template:**
@@ -158,7 +160,8 @@ Some sessions end with "I'll continue this in a fresh session." Offer — once, 
 - ❌ Do not silently edit CLAUDE.md's A/B slots — only after the user picks option (1).
 - ❌ Do not nag. One ask per session run, not per codify invocation. There are two distinct one-shot asks — Phase 1's A/B gap-fill and Phase 3's handoff offer — each fires at most once.
 - ❌ Do not auto-apply findings. Always present the checklist first.
-- ❌ Do not silently overwrite or contradict existing B-layer content. Flag conflicts.
+- ❌ Do not silently drop or contradict an existing B-layer **fact** without flagging. But replacing a stale current-state line with its updated aggregate+pointer is expected B-layer **curation**, not a destructive overwrite — B is curated, not append-only.
+- ❌ Do not grow B with per-session narrative. If a finding reads like a journal entry (what happened this session, in detail), its home is A; B gets a pointer.
 - ❌ Do not "teach" the user how their docs should be structured beyond the A/B concept itself.
 - ❌ Do not skip Phase 2 or turn it back into an opt-in "want a review?" prompt — the review runs automatically as part of codify.
 - ❌ Do not paste or reconstruct `assets/review-procedure.md`'s drift/SSOT procedure into this file — read it from its single source so the two never drift.

@@ -5,7 +5,7 @@
 **Give your AI-coded project a memory that survives across sessions.**
 
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7C3AED)
-![Version](https://img.shields.io/badge/version-0.7.1-blue)
+![Version](https://img.shields.io/badge/version-0.8.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 Every new AI coding session starts cold. The decisions, the dead-ends, the *"where were we?"* from last time — gone. Meanwhile your docs quietly drift away from the code. On long, exploratory work this is brutal: you burn the first twenty minutes of every session re-explaining context your agent already figured out once.
@@ -19,7 +19,7 @@ Every new AI coding session starts cold. The decisions, the dead-ends, the *"whe
 - 🧠 **Cross-session memory.** Findings and decisions land in your repo as real files — so a fresh session *continues* the last one instead of restarting it. This is the whole point.
 - 🔔 **It reminds you.** Setup installs a one-line habit anchor in your `CLAUDE.md`, so your coding agent offers the ritual on its own at session end. Nothing to wire up, nothing to remember.
 - ⏱️ **One command closes the session.** codify → automatic doc-health review → optional handoff plan, all in a single pass.
-- 🛰️ **Drift radar.** Catches broken links, stale timestamps, orphaned docs, and the same "fact" restated in five places — the root cause of docs that lie.
+- 🛰️ **Drift radar.** Catches broken links, stale timestamps, orphaned docs, the same "fact" restated in five places, and B-layer "current state" docs that quietly bloat with per-session narrative — the root causes of docs that lie.
 - 🪶 **Zero lock-in.** No templates. No enforced folder layout. It never silently rewrites your docs — it *proposes*, you approve. Every write is yours.
 - 🎯 **Built for the work that needs it most.** Multi-week spikes, research, architecture — the big, exploratory tasks where losing the thread between sessions costs you the most.
 
@@ -59,6 +59,8 @@ Almost all doc drift has a single cause: **yesterday's "as-of-then" note gets re
 
 Once A and B are separate, drift becomes obvious instead of invisible: a "current state" line that no longer matches its dated source sticks out. That's the entire mental model — and it's universal. **How** A and B look in *your* project (paths, naming, conventions) is entirely your call; the plugin assumes nothing.
 
+**Keep B thin.** A B-layer line is an *aggregate + a pointer* to its A-layer artifact — never a restatement of that artifact's narrative. Per-session detail accretes in A (which may grow without bound); B stays small by pointing, not copying. A-layer size is expected; only B-layer growth is bloat — which is why the drift radar's bloat check scans *only* B.
+
 ## Commands
 
 Two commands. **`codify`** is the single entry point you run every session — it self-bootstraps setup, codifies, reviews, and offers a handoff. **`review`** is a standalone ad-hoc checkup (also run automatically inside codify). There is no separate `/init` — codify absorbs setup as its Phase 0.
@@ -68,7 +70,7 @@ Two commands. **`codify`** is the single entry point you run every session — i
 Run at the end of every session. Self-bootstrapping, idempotent, and **never writes silently** — it runs four phases in order:
 
 - **Phase 0 — setup (automatic).** On first run, sets the project up: creates a minimal `CLAUDE.md` if missing (a short docs-discipline declaration plus two empty A/B slots), or appends only the declaration block to an existing `CLAUDE.md` without touching your governance content. Copies `drift-check.sh` into `scripts/`. On an already-set-up project it just says "already set up" and moves on. It always reports exactly what it created, appended, copied, or skipped.
-- **Phase 1 — codify.** Reads your A/B map, observes your docs structure, and produces a checklist of where this session's findings should land — classified as A (new immutable artifacts) or B (SSOT updates), each with a concrete diff sketch. If your A/B slots are empty it asks **once** — fill them in (preferred), use suggestions for this run only, or skip. You decide what to apply, partially apply, skip, or mark the session exploratory. Nothing is written without your say-so.
+- **Phase 1 — codify.** Reads your A/B map, observes your docs structure, and produces a checklist of where this session's findings should land — classified as A (new immutable artifacts) or B (SSOT updates), each with a concrete diff sketch. If your A/B slots are empty it asks **once** — fill them in (preferred), use suggestions for this run only, or skip. You decide what to apply, partially apply, skip, or mark the session exploratory. Nothing is written without your say-so. It keeps B-layer edits thin — an aggregate plus a pointer — and routes per-session narrative into A (or the handoff), so your SSOT stays small instead of bloating session by session.
 - **Phase 2 — review (automatic).** Continues straight into the doc-health review (drift + SSOT + a one-screen summary). Always runs, stays triage-only — it surfaces candidates, never auto-fixes.
 - **Phase 3 — handoff (optional).** Offers to write a self-contained handoff doc — goal, decisions, current state, next steps, pointers — so you can resume in a fresh session. It asks where to put it and imposes no location. Decline anytime.
 
@@ -92,7 +94,8 @@ The **SSOT scan** finds atomic facts — statuses, version values, decisions, pr
 - ✅ A habit anchor: "run `/docs-discipline:codify` at the end of each session"
 - ✅ The A/B layer pattern as a universal principle
 - ✅ It detects when a project is missing one or both layers, and gently offers to fill them in
-- ✅ Generic drift detection (broken links, stale timestamps, orphan docs, duplicated H1s)
+- ✅ The thinness corollary of A/B: B is an aggregate+pointer layer; per-session narrative lives in A
+- ✅ Generic drift detection (broken links, stale timestamps, orphan docs, duplicated H1s) plus A/B-aware B-layer bloat detection
 
 **What it *does not* assert:**
 

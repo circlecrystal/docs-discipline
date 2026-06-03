@@ -83,7 +83,9 @@ release count            | <fileB>:18 / <fileA>:9          | 12/13 / 11/13      
 
 Suggested canonical home: your best guess based on each file's stated purpose in CLAUDE.md's A/B map. If you cannot tell, write "?".
 
-**(f) Do NOT auto-fix.** SSOT scan is triage. The user decides whether each candidate is intentional or drift, and which home is canonical.
+**(f) Within-file accretion (B absorbing A).** Beyond cross-file restatement (d), flag any single B-layer "current state / snapshot / status" section that has absorbed per-session narrative — multiple dated entries stacked over time, or a high density of implementation-level tokens (hex colors, commit hashes, long code identifiers) that read as a journal rather than an aggregate. These are candidates to **thin to aggregate + pointer**: the narrative belongs in an A-layer artifact, with B keeping a one-line pointer. This is the single-file complement to (d)'s multi-file pattern, and the most common way a "small, living" B layer silently bloats. The deterministic `scripts/drift-check.sh` also surfaces oversized / impl-leaking B files (heuristic 5) — reconcile with its output.
+
+**(g) Do NOT auto-fix.** SSOT scan is triage. The user decides whether each candidate is intentional or drift, and which home is canonical.
 
 ### 6. Output doc health summary
 
@@ -93,8 +95,8 @@ Always end with a one-screen summary. Template:
 === Doc health summary ===
 A layer:  ✓ Filled / 🟡 Suggested / ✗ Empty   — <one-line description>
 B layer:  ✓ Filled / 🟡 Suggested / ✗ Empty   — <one-line description>
-Drift:    N candidates  (broken links: a / stale ts: b / orphans: c / dup H1: d)
-SSOT:     N candidates  (M confirmed drift, P restatement) — scanned N of M B-layer files
+Drift:    N candidates  (broken links: a / stale ts: b / orphans: c / dup H1: d / B-bloat: e)
+SSOT:     N candidates  (M confirmed drift, P restatement, Q within-file accretion) — scanned N of M B-layer files
 Notes:    <any structural observations, or "none">
 ```
 

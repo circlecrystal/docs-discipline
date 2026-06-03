@@ -1,7 +1,7 @@
 {
   "name": "docs-discipline",
   "description": "Give your AI-coded project a memory that survives across sessions: one end-of-session codify command files findings into durable docs, flags doc drift (SSOT-aware), and hands off to the next session. A/B-layered; never auto-edits your docs.",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "author": {
     "name": "Wang Heng"
   }

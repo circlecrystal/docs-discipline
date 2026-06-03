@@ -4,14 +4,21 @@
 # Heuristic detection of documentation drift. Reports candidates only — does not auto-fix.
 # Exit codes: 0 = no drift, 1 = drift candidates found, 2 = setup error.
 #
-# Heuristics (project-agnostic):
-#   1. Broken relative links in markdown
-#   2. last_updated timestamps lagging git log by > N days
-#   3. Orphan markdown files (no other doc references them)
-#   4. Same H1 title used in multiple files (potential SSOT violation)
+# Heuristics:
+#   1. Broken relative links in markdown             (project-agnostic)
+#   2. last_updated timestamps lagging git log       (project-agnostic)
+#   3. Orphan markdown files (no other doc refs)     (project-agnostic)
+#   4. Same H1 title used in multiple files          (project-agnostic)
+#   5. B-layer bloat: oversized / impl-detail leak   (A/B-aware: scans only B)
+#
+# Heuristic 5 is A/B-aware: it scans ONLY the project's B-layer files (declared
+# in CLAUDE.md, or heuristically discovered) so that large, legitimately frozen
+# A-layer artifacts (spike reports, ADRs, handoffs) are never flagged as bloat.
 #
 # Usage: drift-check.sh [ROOT_DIR]
-# Env:   DOCS_DISCIPLINE_STALE_DAYS (default 30)
+# Env:   DOCS_DISCIPLINE_STALE_DAYS  (default 30)
+#        DOCS_DISCIPLINE_B_MAX_LINES (default 250)  B-layer per-file line budget
+#        DOCS_DISCIPLINE_B_MAX_IMPL  (default 12)   B-layer impl-token budget
 
 set -uo pipefail
 
@@ -51,7 +58,7 @@ echo "Scanned: ${#MD[@]} markdown files"
 echo ""
 
 # ----- Heuristic 1: broken relative links -----
-echo "[1/4] Broken relative links"
+echo "[1/5] Broken relative links"
 BROKEN_TMP=$(mktemp)
 for f in "${MD[@]}"; do
   dir=$(dirname "$f")
@@ -85,7 +92,7 @@ echo "  Found: $BROKEN_COUNT"
 echo ""
 
 # ----- Heuristic 2: stale timestamps -----
-echo "[2/4] last_updated lagging git log by > $STALE_DAYS days"
+echo "[2/5] last_updated lagging git log by > $STALE_DAYS days"
 STALE_COUNT=0
 for f in "${MD[@]}"; do
   TS=$(grep -m1 -oE 'last_updated[^0-9]*[0-9]{4}-[0-9]{2}-[0-9]{2}' "$f" 2>/dev/null | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}')
@@ -110,7 +117,7 @@ echo "  Found: $STALE_COUNT"
 echo ""
 
 # ----- Heuristic 3: orphan docs -----
-echo "[3/4] Orphan markdown files (no other doc references them)"
+echo "[3/5] Orphan markdown files (no other doc references them)"
 ORPHAN_COUNT=0
 for f in "${MD[@]}"; do
   basename=$(basename "$f")
@@ -135,7 +142,7 @@ echo "  Found: $ORPHAN_COUNT"
 echo ""
 
 # ----- Heuristic 4: duplicate H1 titles -----
-echo "[4/4] Same H1 title in multiple files"
+echo "[4/5] Same H1 title in multiple files"
 H1_TMP=$(mktemp)
 for f in "${MD[@]}"; do
   H1=$(grep -m1 -E '^# ' "$f" 2>/dev/null | sed -E 's/^# +//')
@@ -154,6 +161,73 @@ fi
 rm -f "$H1_TMP"
 echo "  Found: $DUP_COUNT duplicated H1 title(s)"
 [ "$DUP_COUNT" -gt 0 ] && DRIFT=1
+echo ""
+
+# ----- Heuristic 5: B-layer bloat (A/B-aware) -----
+echo "[5/5] B-layer bloat (oversized / implementation-detail leak)"
+B_MAX_LINES="${DOCS_DISCIPLINE_B_MAX_LINES:-250}"
+B_MAX_IMPL="${DOCS_DISCIPLINE_B_MAX_IMPL:-12}"
+B_FALLBACK=0
+
+# Discover the B-layer file set. Prefer CLAUDE.md's declaration; else heuristics.
+# Same B-set logic as review-procedure.md step 5(b), kept in sync.
+B_RAW=()
+if [ -f "CLAUDE.md" ]; then
+  while IFS= read -r p; do
+    [ -n "$p" ] && B_RAW+=("$p")
+  done < <(awk '
+      /^#+[[:space:]].*[Ww]here this project.?s B layer lives/ {grab=1; next}
+      grab && /^#{1,4}[[:space:]]/ {grab=0}
+      grab {print}
+    ' "CLAUDE.md" \
+    | grep -oE '\]\([^)]+\)|`[^`]+`' \
+    | sed -E 's/^\]\(//; s/\)$//; s/^`//; s/`$//; s/#.*$//; s/\?.*$//' \
+    | grep -E '\.(md|markdown)$')
+fi
+
+if [ "${#B_RAW[@]}" -eq 0 ]; then
+  B_FALLBACK=1
+  for cand in README.md docs/README.md STATUS.md ROADMAP.md; do
+    [ -f "$cand" ] && B_RAW+=("$cand")
+  done
+  for f in "${MD[@]}"; do
+    if head -n 50 "$f" 2>/dev/null | grep -qiE 'current state|snapshot|status|roadmap'; then
+      B_RAW+=("${f#./}")
+    fi
+  done
+fi
+
+# Normalize (strip ./), dedupe.
+B_FILES=()
+if [ "${#B_RAW[@]}" -gt 0 ]; then
+  while IFS= read -r bf; do
+    [ -n "$bf" ] && B_FILES+=("$bf")
+  done < <(printf '%s\n' "${B_RAW[@]}" | sed -E 's#^\./##' | LC_ALL=C sort -u)
+fi
+
+BLOAT_COUNT=0
+if [ "${#B_FILES[@]}" -eq 0 ]; then
+  echo "  No B-layer files identified (declare them in CLAUDE.md to enable this check)."
+else
+  [ "$B_FALLBACK" -eq 1 ] && echo "  (heuristic fallback — no B-layer map in CLAUDE.md; accuracy reduced)"
+  for f in "${B_FILES[@]}"; do
+    [ -f "$f" ] || continue
+    LINES=$(wc -l < "$f" | tr -d ' ')
+    IMPL=$(grep -oE '#[0-9a-fA-F]{6}|[0-9a-f]{7,40}' "$f" 2>/dev/null | wc -l | tr -d ' ')
+    FLAGS=""
+    [ "$LINES" -gt "$B_MAX_LINES" ] && FLAGS="oversized=${LINES}L"
+    if [ "$IMPL" -gt "$B_MAX_IMPL" ]; then
+      [ -n "$FLAGS" ] && FLAGS="$FLAGS, "
+      FLAGS="${FLAGS}impl-leak=${IMPL}tok"
+    fi
+    if [ -n "$FLAGS" ]; then
+      echo "  $f: $FLAGS"
+      BLOAT_COUNT=$((BLOAT_COUNT + 1))
+    fi
+  done
+fi
+echo "  Found: $BLOAT_COUNT"
+[ "$BLOAT_COUNT" -gt 0 ] && DRIFT=1
 echo ""
 
 # ----- Summary -----
