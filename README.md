@@ -1,34 +1,33 @@
+🌐 **English** · [中文](README.zh-CN.md)
+
 # docs-discipline
 
-A Claude Code plugin that adds a session-end **codify** ritual and generic documentation **drift detection** to any project, organized around one universal pattern: **A/B layer separation**.
+**Give your AI-coded project a memory that survives across sessions.**
 
-## Philosophy
+![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7C3AED)
+![Version](https://img.shields.io/badge/version-0.7.1-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-**Like `git`, not `create-react-app`** — with one universal assertion.
+Every new AI coding session starts cold. The decisions, the dead-ends, the *"where were we?"* from last time — gone. Meanwhile your docs quietly drift away from the code. On long, exploratory work this is brutal: you burn the first twenty minutes of every session re-explaining context your agent already figured out once.
 
-This plugin provides primitives plus one shared truth: **durable documentation benefits from separating immutable artifacts (A layer) from living SSOT (B layer).** That isn't an opinion about your project's specific structure; it's the underlying pattern that prevents documentation drift.
+**docs-discipline turns the end of each session into a 60-second ritual.** One command — `/docs-discipline:codify` — files what this session learned into durable docs, checks them for drift, and (optionally) writes a handoff so the *next* session picks up exactly where you left off.
 
-### What the plugin *does* assert
+---
 
-- ✅ A habit anchor: "run `/docs-discipline:codify` at the end of each session"
-- ✅ The A/B layer pattern as a universal principle
-- ✅ Helps detect when a project is missing one or both layers, and gently offers to fill them in
-- ✅ Generic drift detection (broken links, stale timestamps, orphan docs, duplicated H1s)
+## Why you'll want it
 
-### What the plugin *does not* assert
+- 🧠 **Cross-session memory.** Findings and decisions land in your repo as real files — so a fresh session *continues* the last one instead of restarting it. This is the whole point.
+- 🔔 **It reminds you.** Setup installs a one-line habit anchor in your `CLAUDE.md`, so your coding agent offers the ritual on its own at session end. Nothing to wire up, nothing to remember.
+- ⏱️ **One command closes the session.** codify → automatic doc-health review → optional handoff plan, all in a single pass.
+- 🛰️ **Drift radar.** Catches broken links, stale timestamps, orphaned docs, and the same "fact" restated in five places — the root cause of docs that lie.
+- 🪶 **Zero lock-in.** No templates. No enforced folder layout. It never silently rewrites your docs — it *proposes*, you approve. Every write is yours.
+- 🎯 **Built for the work that needs it most.** Multi-week spikes, research, architecture — the big, exploratory tasks where losing the thread between sessions costs you the most.
 
-- ❌ Does **not** assume your A/B layers live at specific paths or follow specific naming
-- ❌ Does **not** ship SSOT maps, status symbol systems, governance whitepapers, or doc templates
-- ❌ Does **not** offer reference examples — they implicitly impose structure
-- ❌ Does **not** force you to fill in A/B if you don't want to. "Skip for now" is always an option.
+> The magic moment: you close a session, open a brand-new one a week later, and your agent already knows what was decided, what's half-done, and what's next — because it's written down, not held in a context window that's long gone.
 
-### Hard constraint
+## Quickstart (30 seconds)
 
-The plugin will not grow templates, examples, or opinions about *how* A/B should look in your project. Its only opinion is that the A/B pattern is universal. Beyond that, your project is your project.
-
-## Install
-
-Claude Code installs plugins through marketplaces. This repo serves as a single-plugin marketplace for itself, so two commands set it up:
+Claude Code installs plugins through marketplaces. This repo is its own single-plugin marketplace, so two commands set it up:
 
 ```
 /plugin marketplace add circlecrystal/docs-discipline
@@ -37,50 +36,77 @@ Claude Code installs plugins through marketplaces. This repo serves as a single-
 
 (`<plugin-name>@<marketplace-name>` — both happen to be `docs-discipline` here.)
 
+Then, at the end of each session, run:
+
+```
+/docs-discipline:codify
+```
+
+That's it. The first run sets your project up automatically (see Phase 0 below) — there's no separate init step.
+
 To update later:
 
 ```
 /plugin marketplace update docs-discipline
 ```
 
+## The one idea: A/B layers
+
+Almost all doc drift has a single cause: **yesterday's "as-of-then" note gets read as today's truth.** docs-discipline fixes that by separating your docs into two layers.
+
+- **A layer — artifacts.** Immutable and dated. Written once, never edited after. Each one captures a point-in-time finding, decision, or session output (an ADR, a spike report, a research note).
+- **B layer — SSOT.** A small, living set of "current state" docs (a README, a status page, a roadmap). Each B-layer claim points back to the A-layer artifact that justifies it.
+
+Once A and B are separate, drift becomes obvious instead of invisible: a "current state" line that no longer matches its dated source sticks out. That's the entire mental model — and it's universal. **How** A and B look in *your* project (paths, naming, conventions) is entirely your call; the plugin assumes nothing.
+
 ## Commands
 
-Two commands. **`codify`** is the single entry point you run every session — it self-bootstraps setup, codifies, reviews, and offers a handoff. **`review`** is a standalone ad-hoc checkup (also auto-run inside codify's Phase 2). There is no separate `/init` — codify absorbs setup as its Phase 0.
+Two commands. **`codify`** is the single entry point you run every session — it self-bootstraps setup, codifies, reviews, and offers a handoff. **`review`** is a standalone ad-hoc checkup (also run automatically inside codify). There is no separate `/init` — codify absorbs setup as its Phase 0.
 
 ### `/docs-discipline:codify`
 
-Run at the end of every session. This one command is **self-bootstrapping** and runs four phases in order:
+Run at the end of every session. Self-bootstrapping, idempotent, and **never writes silently** — it runs four phases in order:
 
-**Phase 0 — setup (automatic, idempotent).** On its first run codify sets the project up — no separate `/init` needed. If `CLAUDE.md` doesn't exist, it creates a minimal one (a docs-discipline declaration plus an A/B section with two empty slots). If `CLAUDE.md` already exists without the docs-discipline marker, it appends only the short declaration block — it does **not** force A/B onto your existing governance content (codify surfaces A/B gently later, in Phase 1). It also copies `drift-check.sh` into `scripts/`. On an already-set-up project, Phase 0 just reports "already set up" in one line and moves on. Phase 0 always reports what it created, appended, copied, or skipped — it never writes silently.
-
-**Phase 1 — codify.** Reads `CLAUDE.md`'s A/B map (if filled), observes your project's docs structure, and produces a checklist of where this session's findings should land — classified by A layer (new immutable artifacts) and B layer (SSOT updates). If your A/B slots are empty, codify will gently ask once per session — never nag. You can fill them in (preferred), use the suggestions for this run only, or skip A/B classification entirely. You decide whether to apply, partially apply, skip, or mark the session as exploratory.
-
-**Phase 2 — review (automatic).** Right after codifying, it continues into the `/docs-discipline:review` drift + SSOT + health summary — no separate invocation needed. This phase always runs (a health check doesn't depend on new findings) and stays triage-only; nothing is auto-fixed.
-
-**Phase 3 — session-handoff plan (optional).** Finally, it offers to write a self-contained handoff document (goal, decisions, current state, next steps, pointers) so you can resume in a fresh session. It asks where to put it and imposes no location. Decline anytime.
+- **Phase 0 — setup (automatic).** On first run, sets the project up: creates a minimal `CLAUDE.md` if missing (a short docs-discipline declaration plus two empty A/B slots), or appends only the declaration block to an existing `CLAUDE.md` without touching your governance content. Copies `drift-check.sh` into `scripts/`. On an already-set-up project it just says "already set up" and moves on. It always reports exactly what it created, appended, copied, or skipped.
+- **Phase 1 — codify.** Reads your A/B map, observes your docs structure, and produces a checklist of where this session's findings should land — classified as A (new immutable artifacts) or B (SSOT updates), each with a concrete diff sketch. If your A/B slots are empty it asks **once** — fill them in (preferred), use suggestions for this run only, or skip. You decide what to apply, partially apply, skip, or mark the session exploratory. Nothing is written without your say-so.
+- **Phase 2 — review (automatic).** Continues straight into the doc-health review (drift + SSOT + a one-screen summary). Always runs, stays triage-only — it surfaces candidates, never auto-fixes.
+- **Phase 3 — handoff (optional).** Offers to write a self-contained handoff doc — goal, decisions, current state, next steps, pointers — so you can resume in a fresh session. It asks where to put it and imposes no location. Decline anytime.
 
 ### `/docs-discipline:review`
 
-Ad-hoc doc health checkup. Reads `CLAUDE.md`'s A/B map, runs the drift scan, performs an SSOT consistency check, and outputs a one-screen summary. Adapts to what you actually need:
+An ad-hoc doc-health checkup you can run anytime, with or without session changes. Reads your A/B map, runs the drift scan, performs an SSOT consistency check, and prints a one-screen summary. Adapts to intent:
 
-- **Bare `/docs-discipline:review`** → full health (A/B state + drift + SSOT + structural observations)
+- **`/docs-discipline:review`** → full health (A/B state + drift + SSOT + structure)
 - **`/docs-discipline:review for drift`** → drift scan only
 - **`/docs-discipline:review A/B`** → A/B assessment + gap-fill only
 - **`/docs-discipline:review SSOT`** → SSOT consistency scan only
 
-The **SSOT scan** identifies atomic facts (statuses, version values, decisions, progress numbers) that appear in multiple B-layer files. Same fact in many places means edits will eventually miss one — that's the root pattern behind most doc drift. The scan reads the B-layer files you declared in CLAUDE.md (or falls back to heuristic discovery if you skipped A/B), cross-references facts, and surfaces candidates. Nothing is auto-fixed; the user decides what's intentional restatement vs. real drift, and which file is canonical.
+The **SSOT scan** finds atomic facts — statuses, version values, decisions, progress numbers — restated across multiple B-layer files. Same fact in many places means an edit will eventually miss one; that's where drift is born. It surfaces candidates and flags mismatches; **you** decide what's intentional restatement vs. real drift, and which file is canonical.
 
-Drift findings come from `scripts/drift-check.sh` (broken links, stale timestamps, orphan documents, duplicated H1s). For pure CI/cron use, invoke that script directly — it stays a deterministic, scriptable interface.
+## Design principles
 
-## How to use it well
+**Like `git`, not `create-react-app`.** The plugin gives you primitives plus exactly one shared truth — *durable docs benefit from separating immutable artifacts (A) from living SSOT (B)* — and then gets out of your way.
 
-1. Just run `/docs-discipline:codify` — on its first run, Phase 0 self-initializes the project (creates `CLAUDE.md` if missing, copies the drift script). No separate setup command.
-2. Open `CLAUDE.md` and either write your own description of where A and B live, confirm the A/B candidates codify surfaces on its first run, or leave the slots empty (codify or review will gently ask later).
-3. Add anything else under `## Project governance` as you see fit — the plugin won't touch it.
-4. At the end of each Claude Code session, run `/docs-discipline:codify`. One command does it all: it codifies findings, then auto-runs the doc-health review, then optionally writes a session-handoff plan.
-5. Anytime you want a doc status read (with or without session changes), run `/docs-discipline:review`.
-6. For automation (CI / cron / weekly), wire `scripts/drift-check.sh` directly.
+**What it *does* assert:**
+
+- ✅ A habit anchor: "run `/docs-discipline:codify` at the end of each session"
+- ✅ The A/B layer pattern as a universal principle
+- ✅ It detects when a project is missing one or both layers, and gently offers to fill them in
+- ✅ Generic drift detection (broken links, stale timestamps, orphan docs, duplicated H1s)
+
+**What it *does not* assert:**
+
+- ❌ It does **not** assume your A/B layers live at specific paths or follow specific naming
+- ❌ It does **not** ship SSOT maps, status-symbol systems, governance whitepapers, or doc templates
+- ❌ It does **not** offer reference examples — they'd implicitly impose structure
+- ❌ It does **not** force you to fill in A/B. "Skip for now" is always an option.
+
+**Hard constraint.** The plugin will not grow templates, examples, or opinions about *how* A/B should look in your project. Its only opinion is that the A/B pattern is universal. Beyond that, your project is your project.
+
+## Automation (CI / cron)
+
+Drift findings come from `scripts/drift-check.sh` — a deterministic, scriptable interface (broken links, stale timestamps, orphan documents, duplicated H1s; exit code + stdout). For pure CI or weekly-cron use, call it directly, no agent required.
 
 ## License
 
-MIT
+MIT © Wang Heng · [github.com/circlecrystal/docs-discipline](https://github.com/circlecrystal/docs-discipline)
