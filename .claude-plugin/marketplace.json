@@ -7,12 +7,36 @@
   "plugins": [
     {
       "name": "docs-discipline",
+      "displayName": "Docs Discipline",
       "source": "./",
       "description": "Give your AI-coded project a memory that survives across sessions: one end-of-session codify command files findings into durable docs, flags doc drift (SSOT-aware), and hands off to the next session. A/B-layered; never auto-edits your docs.",
-      "version": "0.8.0",
+      "version": "0.8.1",
+      "author": {
+        "name": "Wang Heng",
+        "email": "circlecrystal@gmail.com",
+        "url": "https://github.com/circlecrystal"
+      },
       "homepage": "https://github.com/circlecrystal/docs-discipline",
       "repository": "https://github.com/circlecrystal/docs-discipline",
-      "license": "MIT"
+      "license": "MIT",
+      "category": "documentation",
+      "keywords": [
+        "documentation",
+        "docs",
+        "session-handoff",
+        "cross-session-memory",
+        "drift-detection",
+        "ssot",
+        "adr",
+        "knowledge-management"
+      ],
+      "tags": [
+        "documentation",
+        "governance",
+        "handoff",
+        "drift",
+        "ssot"
+      ]
     }
   ]
 }

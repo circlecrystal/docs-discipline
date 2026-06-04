@@ -3,6 +3,36 @@
 All notable changes to docs-discipline are recorded here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is [SemVer](https://semver.org/).
 
+## [0.8.1] — 2026-06-04
+
+Theme: **make the plugin easy to review, trust, and discover** — a docs/metadata
+release prepping docs-discipline for the Anthropic community-marketplace submission
+pipeline (`claude plugin validate` + automated safety screening). No behavior change
+to `codify`, `review`, or `drift-check.sh`.
+
+### Added
+- **READMEs (both languages) gain three reviewer- and user-facing sections:**
+  *What's in the box* (the exact component inventory — two commands + one read-only
+  script, and explicitly **no agents/hooks/MCP/LSP**, so per-turn context cost is
+  ~zero), *Requirements* (Claude Code `/plugin`, Bash, optional Git), and
+  *Safety & permissions — what it touches* (reads docs + read-only git metadata;
+  writes only what you approve with a printed receipt; no network, no telemetry, no
+  silent writes).
+- **`plugin.json` metadata completed for validation + discovery:** `$schema`,
+  `displayName`, `homepage`, `repository`, `license`, `keywords`, and full `author`
+  (name + email + url). Previously only `name`/`description`/`version`/`author.name`.
+- **`marketplace.json` plugin entry** gains `displayName`, `author`, `category`,
+  `keywords`, and `tags` for catalog searchability.
+- Two README badges advertising the trust posture: `network-none` and
+  `writes-you approve`.
+
+### Changed
+- Install section now documents both the direct self-hosted-marketplace path
+  (works today) and the community-marketplace path (`@claude-community`, once the
+  submission is accepted) — without claiming availability before it lands.
+- Version unified to `0.8.1` across `plugin.json`, `marketplace.json`, and both
+  README badges.
+
 ## [0.8.0] — 2026-06-03
 
 Theme: **stop the B layer from silently bloating.** The most common long-term failure

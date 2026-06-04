@@ -5,8 +5,10 @@
 **Give your AI-coded project a memory that survives across sessions.**
 
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7C3AED)
-![Version](https://img.shields.io/badge/version-0.8.0-blue)
+![Version](https://img.shields.io/badge/version-0.8.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![No network](https://img.shields.io/badge/network-none-brightgreen)
+![Never auto-edits](https://img.shields.io/badge/writes-you%20approve-brightgreen)
 
 Every new AI coding session starts cold. The decisions, the dead-ends, the *"where were we?"* from last time — gone. Meanwhile your docs quietly drift away from the code. On long, exploratory work this is brutal: you burn the first twenty minutes of every session re-explaining context your agent already figured out once.
 
@@ -36,6 +38,8 @@ Claude Code installs plugins through marketplaces. This repo is its own single-p
 
 (`<plugin-name>@<marketplace-name>` — both happen to be `docs-discipline` here.)
 
+> *Heads up:* docs-discipline is also being submitted to Anthropic's community marketplace. Once it lands there you can instead `/plugin marketplace add anthropics/claude-plugins-community` and `/plugin install docs-discipline@claude-community`. Until then, the direct install above is the way.
+
 Then, at the end of each session, run:
 
 ```
@@ -49,6 +53,36 @@ To update later:
 ```
 /plugin marketplace update docs-discipline
 ```
+
+## What's in the box
+
+Two slash commands and one script — nothing that runs on its own:
+
+| Component | What it is |
+| --- | --- |
+| `/docs-discipline:codify` | The end-of-session ritual: self-bootstrap → codify → review → optional handoff |
+| `/docs-discipline:review` | Standalone doc-health checkup (drift + SSOT) |
+| `scripts/drift-check.sh` | A read-only Bash scanner, copied into your repo on first run, that powers the drift heuristics (also callable from CI/cron) |
+| `CLAUDE.md` stub | A minimal habit anchor + A/B scaffold, created or appended on first run |
+
+**No agents, no hooks, no MCP servers, no LSP servers.** Nothing wires itself into your session loop, so the per-turn context cost is effectively zero — the commands run only when *you* invoke them.
+
+## Requirements
+
+- **Claude Code** with plugin support (the `/plugin` command).
+- **Bash** for `drift-check.sh` (macOS/Linux; it handles both BSD and GNU `date`). The agent-driven phases work without it — only the scriptable drift scan needs a shell.
+- **Git** is optional: `drift-check.sh` uses it when present (to respect `.gitignore` and read commit dates) and falls back to a plain file walk when absent.
+
+## Safety & permissions — what it touches
+
+docs-discipline is deliberately low-trust. Exactly what it does, and does not, do:
+
+- **Reads** your repo's markdown and `CLAUDE.md`, plus read-only git metadata (`git ls-files`, `git log`) via `drift-check.sh`.
+- **Writes only what you approve.** On first run it may create `CLAUDE.md` (or append a declaration block to an existing one) and copy `drift-check.sh` into `scripts/` — and it always prints a receipt of exactly what it created, appended, copied, or skipped. Every other write (A/B doc edits, the handoff doc) is *proposed as a checklist first* and applied only on your say-so.
+- **Never writes silently, never auto-fixes.** The review phase is triage-only — it surfaces candidates and lets you decide.
+- **No network, no telemetry, no external services.** `drift-check.sh` is a plain Bash scanner that reads files and emits an exit code + stdout; it never modifies your docs.
+
+That is the whole surface area — there is nothing else running in the background.
 
 ## The one idea: A/B layers
 
